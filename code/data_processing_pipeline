@@ -1,0 +1,68 @@
+import os
+import numpy as np
+from PIL import Image
+from sklearn.preprocessing import OrdinalEncoder
+import torchvision.transforms as transforms
+from torch.utils.data import Dataset, DataLoader
+
+# Custom Dataset class
+class ElectronicComponentsDataset(Dataset):
+    def __init__(self, img_dir, labels, label_encoder, transform=None):
+        self.img_dir = img_dir
+        self.labels = labels
+        self.label_encoder = label_encoder
+        self.transform = transform
+        self.img_filenames = list(labels.keys())
+
+    def __len__(self):
+        return len(self.img_filenames)
+
+    def __getitem__(self, idx):
+        img_name = self.img_filenames[idx]
+        img_path = os.path.join(self.img_dir, img_name)
+        image = Image.open(img_path).convert('RGB')
+        label = self.labels[img_name]
+
+        # Apply ordinal label encoding
+        encoded_label = self.label_encoder.transform([[label]])[0][0]
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, encoded_label
+
+# Define image augmentation transformations
+data_transforms = transforms.Compose([
+    transforms.RandomRotation(15),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomResizedCrop(size=224, scale=(0.8, 1.0)),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+    transforms.ToTensor()
+])
+
+# Example label data (image filename -> ordinal class)
+labels = {
+    'component1.jpg': 'Class1',
+    'component2.jpg': 'Class2',
+    'component3.jpg': 'Class3',
+    # ...
+}
+
+# Encoding the ordinal labels
+ordinal_categories = [['Class1', 'Class2', 'Class3']]  # Define order of classes
+label_encoder = OrdinalEncoder(categories=ordinal_categories)
+label_encoder.fit(np.array(list(labels.values())).reshape(-1, 1))
+
+# Create dataset object
+dataset = ElectronicComponentsDataset(img_dir='/path/to/images',
+                                      labels=labels,
+                                      label_encoder=label_encoder,
+                                      transform=data_transforms)
+
+# Prepare dataloader for batch processing
+dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+
+# Example of iterating over the dataloader
+for images, labels in dataloader:
+    print(images.shape)  # torch.Size([batch_size, 3, 224, 224])
+    print(labels)        # encoded ordinal labels
