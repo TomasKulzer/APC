@@ -26,7 +26,9 @@ class ImageLoader:
         map class names to ordinal labels,
         collect image paths and labels.
         """
-        self.class_names = sorted(entry.name for entry in os.scandir(self.root_dir) if entry.is_dir())
+        """self.class_names = sorted(entry.name for entry in os.scandir(self.root_dir) if entry.is_dir())"""
+        self.class_names = ["resistor", "capacitor", "transistor", "IC"]
+
         self.class_to_idx = {cls_name: idx for idx, cls_name in enumerate(self.class_names)}
 
         for cls_name in self.class_names:
@@ -44,7 +46,7 @@ class ImageLoader:
         - image as numpy array of shape (height, width, channels)
         """
         img = Image.open(image_path).convert('RGB')
-        img = img.resize(self.image_size, Image.ANTIALIAS)
+        img = img.resize(self.image_size, resample=Image.Resampling.LANCZOS)
         return np.array(img)
 
     def __len__(self):
