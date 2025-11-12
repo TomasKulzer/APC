@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 from skimage import exposure
 from skimage.feature import hog
@@ -126,19 +127,30 @@ def visualize_sample_with_features(data_path, save_path):
     # Create visualizations
     vis = FeatureVisualizer()
     
+    # Determine a dedicated visuals directory under the features folder.
+    # Use the directory of save_path (usually ../features) and place visuals in a subfolder.
+    base_features_dir = os.path.dirname(save_path) if save_path else '../features'
+    if base_features_dir == '':
+        base_features_dir = '.'
+    visuals_dir = os.path.join(base_features_dir, 'visualizations', 'hog')
+    os.makedirs(visuals_dir, exist_ok=True)
+
     # 1. HOG visualization
     fig1 = vis.visualize_hog_features(image)
-    fig1.savefig('hog_visualization.png')
-    
+    hog_path = os.path.join(visuals_dir, 'hog_visualization.png')
+    fig1.savefig(hog_path)
+
     # 2. Feature heatmap
     fig2 = vis.plot_feature_heatmap(features)
-    fig2.savefig('feature_heatmap.png')
-    
+    heatmap_path = os.path.join(visuals_dir, 'feature_heatmap.png')
+    fig2.savefig(heatmap_path)
+
     # 3. Class average features
     fig3 = vis.plot_class_average_features(features, labels, class_names)
-    fig3.savefig('class_average_features.png')
-    
-    print("Visualizations saved as:")
-    print("- hog_visualization.png")
-    print("- feature_heatmap.png")
-    print("- class_average_features.png")
+    avg_path = os.path.join(visuals_dir, 'class_average_features.png')
+    fig3.savefig(avg_path)
+
+    print("Visualizations saved to:")
+    print(f"- {hog_path}")
+    print(f"- {heatmap_path}")
+    print(f"- {avg_path}")
