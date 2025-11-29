@@ -1,0 +1,109 @@
+APC - Automated PCB Component Classification
+=============================================
+
+Project Structure:
+------------------
+
+APC/
+│
+├── code/                                    # Main pipeline scripts
+│   ├── 01_prepare_data.py                  # Dataset splitting (60/20/20 stratified)
+│   ├── 02_extract_hog.py                   # HOG feature extraction
+│   ├── 02_extract_color_hist.py            # Color histogram extraction (HSV)
+│   ├── 02_extract_sift.py                  # SIFT BoW feature extraction
+│   ├── 03_combine_features.py              # Feature combination & scaling
+│   ├── 04_train_svm.py                     # Integer SVM training
+│   ├── 04_train_rf.py                      # Integer Random Forest training
+│   ├── 04_train_svm_ordinal.py             # Ordinal SVM training
+│   ├── 04_train_rf_ordinal.py              # Ordinal Random Forest training
+│   ├── 05_visualize.py                     # Feature visualization
+│   ├── 06_compare_models.py                # Model performance comparison
+│   │
+│   ├── data_loading_and_preprocessing/     # Data utilities
+│   │   ├── image_loader.py                 # Image loading & augmentation
+│   │   └── ordinal_encoding.py             # Ordinal label encoder
+│   │
+│   ├── data_splitting/                     # Dataset splitting
+│   │   └── split_dataset.py                # Stratified train/val/test split
+│   │
+│   ├── feature_extraction/                 # Feature extraction modules
+│   │   ├── hog_extractor.py                # HOG (26,244-d)
+│   │   ├── color_histogram.py              # Color Histogram HSV (96-d)
+│   │   ├── sift.py                         # SIFT BoW (128-d)
+│   │   └── feature_combiner.py             # Feature combination utilities
+│   │
+│   └── model_training/                     # Training modules
+│       ├── svm_training.py                 # Integer SVM training
+│       ├── rf_training.py                  # Integer RF training
+│       ├── ordinal_svm_training.py         # Ordinal multi-output SVM
+│       └── ordinal_rf_training.py          # Ordinal multi-output RF
+│
+├── dataset/                                # Image dataset
+│   ├── resistor/                           # 182 samples
+│   ├── capacitor/                          # 117 samples
+│   ├── transistor/                         # 194 samples
+│   ├── IC/                                 # 159 samples
+│   └── splits.joblib                       # Train/val/test splits (391/130/131)
+│
+├── features/                               # Extracted features
+│   ├── hog_{train,val,test}.joblib         # HOG features per split
+│   ├── colorhist_{train,val,test}.joblib   # Color histogram features
+│   ├── sift_{train,val,test}.joblib        # SIFT BoW features
+│   │
+│   ├── combined/                           # Combined & scaled features
+│   │   ├── combined_{train,val,test}.joblib         # 26,468-d features
+│   │   ├── labels_{train,val,test}.joblib           # Integer labels (0-3)
+│   │   ├── labels_{train,val,test}_ordinal.joblib   # Ordinal labels (binary)
+│   │   ├── scaler.joblib                            # StandardScaler
+│   │   └── ordinal_encoder_info.joblib              # Class ordering info
+│   │
+│   ├── model_svm.joblib                    # Integer SVM model
+│   ├── model_rf.joblib                     # Integer RF model
+│   ├── model_svm_ordinal.joblib            # Ordinal SVM model
+│   └── model_rf_ordinal.joblib             # Ordinal RF model
+│
+└── visualizations/                         # Feature visualizations
+    └── features/
+        ├── hog/                            # HOG visualizations
+        ├── color_hist/                     # Color histogram plots
+        └── sift/                           # SIFT keypoint visualizations
+
+
+Key Statistics:
+---------------
+• Total Samples: 652 images (4 classes)
+• Dataset Split: 60% train / 20% val / 20% test (stratified)
+• Feature Dimensionality: 26,468 combined features
+  - HOG: 26,244 dimensions
+  - Color Histogram (HSV): 96 dimensions
+  - SIFT Bag-of-Words: 128 dimensions
+
+• Class Order (by complexity):
+  resistor → capacitor → transistor → IC
+
+• Best Model Performance (Test Set):
+  - Integer Random Forest: 79.39%
+  - Integer SVM: 77.86%
+  - Ordinal SVM: 77.10%
+  - Ordinal Random Forest: 75.57%
+
+
+Pipeline Workflow:
+------------------
+1. Data Preparation (01_prepare_data.py)
+   → Stratified split into train/val/test sets
+
+2. Feature Extraction (02_extract_*.py)
+   → HOG, Color Histogram, SIFT extracted separately
+
+3. Feature Combination (03_combine_features.py)
+   → Combine all features, scale, generate both integer & ordinal labels
+
+4. Model Training (04_train_*.py)
+   → Train SVM and Random Forest with both encoding approaches
+
+5. Visualization (05_visualize.py)
+   → Generate feature visualizations for analysis
+
+6. Evaluation (06_compare_models.py)
+   → Compare integer vs ordinal classification performance
