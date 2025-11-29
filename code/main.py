@@ -16,7 +16,8 @@ if __name__ == "__main__":
     parser.add_argument('--color-save', default='../features/color_hist_features.joblib', help='Where to save color histogram features')
     args = parser.parse_args()
 
-    loader = ImageLoader('../training_data', image_size=(224,224))
+    # Use dataset directory inside the `code/` folder
+    loader = ImageLoader('dataset', image_size=(224,224))
     print(f"Found classes: {loader.class_names}")
     print(f"Number of samples: {len(loader)}")
     image, label = loader[0]
@@ -31,15 +32,15 @@ if __name__ == "__main__":
 
     # Process entire dataset
     features, labels = hog_extractor.process_dataset(
-    data_path='../training_data',
+    data_path='dataset',
     save_path='../features/hog_features.joblib'
     )
 
     print(f"Extracted features shape: {features.shape}")
     print(f"Number of samples: {len(labels)}")
     
-    # Generate and save visualizations
-    visualize_sample_with_features('../training_data', '../features/hog_features.joblib')
+    # Generate and save visualizations (use `code/dataset`)
+    visualize_sample_with_features('dataset', '../features/hog_features.joblib')
     
     # Initialize and run SIFT Bag-of-Words (if you have images available)
     sift_bow = SIFTBagOfWords(k=128)
