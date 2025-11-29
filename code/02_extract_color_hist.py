@@ -24,7 +24,7 @@ from feature_extraction.color_histogram import ColorHistogramExtractor
 def main():
     data_dir = 'dataset'
     splits_file = os.path.join(data_dir, 'splits.joblib')
-    out_dir = os.path.join('..', 'features')
+    out_dir = 'features'
     os.makedirs(out_dir, exist_ok=True)
 
     if not os.path.exists(splits_file):

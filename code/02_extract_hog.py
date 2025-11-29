@@ -20,7 +20,7 @@ from feature_extraction.hog_extractor import HOGFeatureExtractor
 def main():
     data_dir = 'dataset'
     splits_file = os.path.join(data_dir, 'splits.joblib')
-    out_dir = os.path.join('..', 'features')
+    out_dir = 'features'
     os.makedirs(out_dir, exist_ok=True)
 
     if not os.path.exists(splits_file):

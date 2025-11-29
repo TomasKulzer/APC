@@ -40,14 +40,15 @@ def train_svm(
     - fitted search object with best_estimator_, best_params_, best_score_, cv_results_
     """
     if param_grid is None:
+        # Reduced grid for high-dimensional features to speed up training
         param_grid = {
-            'svc__C': [0.1, 1, 10],
-            'svc__gamma': ['scale', 'auto', 0.001],
+            'svc__C': [1, 10],
+            'svc__gamma': ['scale'],
         }
 
     pipeline = Pipeline([
         ('scaler', StandardScaler()),
-        ('svc', SVC(kernel='rbf', probability=True))
+        ('svc', SVC(kernel='rbf', probability=True, cache_size=1000))
     ])
 
     # Manual search loop with progress bar so user sees candidate progress.

@@ -78,11 +78,13 @@ def main(data_dir: str = 'dataset'):
         'val_labels': y_val.tolist(),
         'test_paths': rel_paths(X_test.tolist()),
         'test_labels': y_test.tolist(),
+        'class_names': loader.class_names,  # Save class names for ordinal encoding
     }
 
     splits_file = os.path.join(data_dir, 'splits.joblib')
     joblib.dump(splits, splits_file)
     print(f"Saved dataset splits to: {splits_file}")
+    print(f"Class order (for ordinal encoding): {loader.class_names}")
 
 
 if __name__ == '__main__':
