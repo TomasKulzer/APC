@@ -130,6 +130,16 @@ def main():
     except FileNotFoundError:
         print("✗ Ordinal Random Forest not found (features/model_rf_ordinal.joblib)")
     
+    # Gradient Boosting
+    try:
+        model_data = joblib.load('features/model_gb.joblib')
+        # Handle both SimpleNamespace and direct model objects
+        model_gb = model_data.best_estimator_ if hasattr(model_data, 'best_estimator_') else model_data
+        models_to_compare.append(('Gradient Boosting', model_gb, y_test_int))
+        print("✓ Gradient Boosting loaded")
+    except FileNotFoundError:
+        print("✗ Gradient Boosting not found (features/model_gb.joblib)")
+    
     if len(models_to_compare) == 0:
         print("\nNo models found! Please train models first.")
         return
