@@ -1,0 +1,120 @@
+"""
+Random Forest training module
+
+This module contains functions for training Random Forest classifiers with hyperparameter search.
+"""
+
+from typing import Optional, Dict
+import os
+import joblib
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import ParameterGrid, ParameterSampler, cross_val_score
+from types import SimpleNamespace
+from tqdm import tqdm
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+
+def train_random_forest(
+    X: np.ndarray,
+    y: np.ndarray,
+    param_grid: Optional[Dict] = None,
+    cv: int = 5,
+    search: str = 'grid',
+    n_jobs: int = -1,
+    random_state: int = 42,
+    use_oob: bool = True,
+):
+    """
+    Train a Random Forest classifier with hyperparameter search.
+
+    Parameters
+    - X, y: training data (features and integer labels)
+    - param_grid: parameter grid for GridSearchCV. If None, a sensible default will be used.
+    - cv: cross-validation folds
+    - search: 'grid' or 'randomized'
+    - n_jobs: number of parallel jobs for search
+    - random_state: random seed for reproducibility
+    - use_oob: whether to enable out-of-bag scoring in RandomForest
+
+    Returns
+    - fitted search object with best_estimator_, best_params_, best_score_, cv_results_
+    """
+    if param_grid is None:
+        param_grid = {
+            'rf__n_estimators': [50, 100, 200],
+            'rf__max_depth': [10, 20, None],
+            'rf__min_samples_split': [2, 5, 10],
+        }
+
+    # Use pipeline with scaler for consistency, though RF doesn't strictly require it
+    pipeline = Pipeline([
+        ('scaler', StandardScaler()),
+        ('rf', RandomForestClassifier(random_state=random_state, oob_score=use_oob, n_jobs=1))
+    ])
+
+    # Manual search loop with progress bar
+    if search == 'grid':
+        candidates = list(ParameterGrid(param_grid))
+    elif search == 'randomized':
+        candidates = list(ParameterSampler(param_grid, n_iter=10, random_state=random_state))
+    else:
+        raise ValueError("search must be 'grid' or 'randomized'")
+
+    results = []
+    # Iterate candidates with a progress bar and evaluate via cross_val_score
+    for params in tqdm(candidates, desc='Random Forest hyperparameter candidates'):
+        pipeline.set_params(**params)
+        try:
+            scores = cross_val_score(pipeline, X, y, cv=cv, n_jobs=n_jobs)
+            results.append({'params': params, 'mean_test_score': float(scores.mean()), 'std_test_score': float(scores.std())})
+        except Exception as e:
+            results.append({'params': params, 'mean_test_score': float('-inf'), 'std_test_score': None, 'error': str(e)})
+
+    # Choose best candidate
+    best = max(results, key=lambda r: r['mean_test_score'])
+    best_params = best['params']
+    # Fit pipeline on full training data with best params
+    pipeline.set_params(**best_params)
+    pipeline.fit(X, y)
+
+    # Construct a lightweight searcher-like object for compatibility
+    searcher = SimpleNamespace()
+    searcher.best_params_ = best_params
+    searcher.best_score_ = best['mean_test_score']
+    searcher.cv_results_ = results
+    searcher.best_estimator_ = pipeline
+    # Include OOB score if available
+    if use_oob and hasattr(pipeline.named_steps['rf'], 'oob_score_'):
+        searcher.oob_score_ = pipeline.named_steps['rf'].oob_score_
+    return searcher
+
+
+def load_data(path: str):
+    """Load training data from a joblib file, supporting multiple common key formats."""
+    data = joblib.load(path)
+    # Support multiple common key names
+    if 'X' in data and 'y' in data:
+        return data['X'], data['y']
+    if 'features' in data and 'labels' in data:
+        return data['features'], data['labels']
+    if 'features' in data and 'labels' not in data and 'y' in data:
+        return data['features'], data['y']
+    # Check for separate labels file (common in combined/ workflow)
+    if 'features' in data:
+        # Try to find labels_{split}.joblib in same directory
+        abs_path = os.path.abspath(path)
+        dirname = os.path.dirname(abs_path)
+        basename = os.path.basename(abs_path)
+        # Extract split name: e.g., combined_train.joblib -> train
+        if basename.startswith('combined_') and basename.endswith('.joblib'):
+            split_name = basename.replace('combined_', '').replace('.joblib', '')
+            labels_path = os.path.join(dirname, f'labels_{split_name}.joblib')
+            if os.path.exists(labels_path):
+                labels_data = joblib.load(labels_path)
+                if 'labels' in labels_data:
+                    return data['features'], labels_data['labels']
+                elif isinstance(labels_data, (list, np.ndarray)):
+                    return data['features'], labels_data
+    raise KeyError('Input file must contain keys (X,y) or (features,labels), or have a separate labels file')
