@@ -65,19 +65,22 @@ class HOGFeatureExtractor:
 
         if image_paths is not None and labels is not None:
             # image_paths expected to be full paths or relative to data_path
+            # Create a single ImageLoader instance
+            loader_kwargs = loader_kwargs or {}
+            loader = ImageLoader(data_path, **loader_kwargs)
+            
             total_images = len(image_paths)
             for i in tqdm(range(0, total_images, batch_size), desc=f"Extracting HOG features ({split_name or 'custom'})"):
                 batch_end = min(i + batch_size, total_images)
                 for idx in range(i, batch_end):
                     img_path = image_paths[idx]
-                    # load and resize using ImageLoader for consistency
-                    loader = ImageLoader(os.path.dirname(img_path)) if (data_path is None and os.path.isabs(img_path)) else ImageLoader(data_path)
                     # If img_path is relative to data_path, make full path
                     # If img_path is absolute or already includes data_path prefix, use as-is
                     if os.path.isabs(img_path) or (data_path and img_path.startswith(data_path + os.sep)):
                         full_path = img_path
                     else:
                         full_path = os.path.join(data_path, img_path)
+                    # Load image
                     image = loader.load_image(full_path)
                     label = labels[idx]
                     hog_features = self.extract_features(image)

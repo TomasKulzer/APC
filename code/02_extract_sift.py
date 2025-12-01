@@ -43,10 +43,12 @@ def main():
             train_paths.append(os.path.join(data_dir, p))
 
     from tqdm import tqdm
+    
     print('Collecting descriptors from training images to fit vocabulary...')
     all_desc = []
     for p in tqdm(train_paths, desc='Collecting SIFT descriptors'):
-        desc = bow.extract_sift_descriptors(cv2.imread(p))
+        img = cv2.imread(p)
+        desc = bow.extract_sift_descriptors(img)
         if desc is not None and desc.shape[0] > 0:
             all_desc.append(desc)
     if all_desc:
@@ -67,7 +69,9 @@ def main():
                 paths.append(p)
             else:
                 paths.append(os.path.join(data_dir, p))
+        
         print(f'Processing {len(paths)} images for split {split}...')
+        
         # Use process_images-like flow but with pre-fit vocabulary
         image_descs = []
         for p in tqdm(paths, desc=f'SIFT extract {split}'):

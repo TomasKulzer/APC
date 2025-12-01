@@ -18,9 +18,18 @@ from data_loading_and_preprocessing.image_loader import ImageLoader
 from sklearn.model_selection import train_test_split
 import joblib
 import numpy as np
+from tqdm import tqdm
+import cv2
 
 
-def main(data_dir: str = 'dataset'):
+def main(data_dir: str = 'dataset', n_augmentations: int = 3):
+    """
+    Prepare dataset splits and optionally generate augmented training images.
+    
+    Parameters:
+    - data_dir: Root directory containing class subdirectories
+    - n_augmentations: Number of augmented versions to generate per training image (0 = no augmentation)
+    """
     if not os.path.isdir(data_dir):
         print(f"Dataset directory '{data_dir}' not found.")
         return
@@ -71,9 +80,64 @@ def main(data_dir: str = 'dataset'):
                 rel.append(p)
         return rel
 
+    # Generate augmented training images if requested
+    if n_augmentations > 0:
+        print(f"\n=== Generating {n_augmentations} augmented versions per training image ===")
+        aug_dir = os.path.join(data_dir, 'augmented')
+        os.makedirs(aug_dir, exist_ok=True)
+        
+        # Create subdirectories for each class
+        for class_name in loader.class_names:
+            os.makedirs(os.path.join(aug_dir, class_name), exist_ok=True)
+        
+        # Create augmentation loader
+        aug_loader = ImageLoader(data_dir, image_size=(224, 224), mode='train', augment=True)
+        
+        augmented_paths = []
+        augmented_labels = []
+        
+        for idx, (path, label) in enumerate(tqdm(zip(X_train, y_train), total=len(X_train), desc="Augmenting training images")):
+            class_name = loader.class_names[label]
+            # Original filename
+            orig_filename = os.path.splitext(os.path.basename(path))[0]
+            
+            # Path is already absolute from loader.image_paths
+            full_path = path
+            
+            image = aug_loader.load_image(full_path)
+            
+            # Generate n_augmentations versions
+            for aug_idx in range(n_augmentations):
+                # Apply augmentation
+                aug_image = aug_loader._apply_augmentations(image)
+                
+                # Save augmented image
+                aug_filename = f"{orig_filename}_aug{aug_idx}.jpg"
+                aug_path = os.path.join(aug_dir, class_name, aug_filename)
+                
+                # Convert RGB to BGR for cv2.imwrite
+                aug_image_bgr = cv2.cvtColor(aug_image, cv2.COLOR_RGB2BGR)
+                cv2.imwrite(aug_path, aug_image_bgr)
+                
+                # Store relative path
+                rel_aug_path = os.path.relpath(aug_path, data_dir)
+                augmented_paths.append(rel_aug_path)
+                augmented_labels.append(label)
+        
+        print(f"Generated {len(augmented_paths)} augmented images in {aug_dir}")
+        
+        # Combine original training data with augmented data
+        train_paths_combined = rel_paths(X_train.tolist()) + augmented_paths
+        train_labels_combined = y_train.tolist() + augmented_labels
+        
+        print(f"Total training samples: {len(train_paths_combined)} (original: {len(X_train)}, augmented: {len(augmented_paths)})")
+    else:
+        train_paths_combined = rel_paths(X_train.tolist())
+        train_labels_combined = y_train.tolist()
+    
     splits = {
-        'train_paths': rel_paths(X_train.tolist()),
-        'train_labels': y_train.tolist(),
+        'train_paths': train_paths_combined,
+        'train_labels': train_labels_combined,
         'val_paths': rel_paths(X_val.tolist()),
         'val_labels': y_val.tolist(),
         'test_paths': rel_paths(X_test.tolist()),

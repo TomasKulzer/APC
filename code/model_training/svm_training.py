@@ -9,7 +9,7 @@ import os
 import joblib
 import numpy as np
 from sklearn.svm import SVC
-from sklearn.model_selection import ParameterGrid, ParameterSampler, cross_val_score
+from sklearn.model_selection import ParameterGrid, ParameterSampler, cross_val_score, StratifiedKFold
 from types import SimpleNamespace
 from tqdm import tqdm
 from sklearn.pipeline import Pipeline
@@ -60,11 +60,28 @@ def train_svm(
         raise ValueError("search must be 'grid' or 'randomized'")
 
     results = []
-    # Iterate candidates with a progress bar and evaluate via cross_val_score
-    for params in tqdm(candidates, desc='SVM hyperparameter candidates'):
+    # Create CV splitter
+    cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
+    
+    # Iterate candidates with nested progress bars for better visibility
+    for params in tqdm(candidates, desc='SVM hyperparameter search', position=0):
         pipeline.set_params(**params)
         try:
-            scores = cross_val_score(pipeline, X, y, cv=cv, n_jobs=n_jobs)
+            scores = []
+            # Manual CV loop with progress bar for each fold
+            for fold_idx, (train_idx, val_idx) in enumerate(tqdm(cv_splitter.split(X, y), 
+                                                                   total=cv, 
+                                                                   desc=f'  CV folds (C={params.get("svc__C", "?")})', 
+                                                                   position=1, 
+                                                                   leave=False)):
+                X_train_fold, X_val_fold = X[train_idx], X[val_idx]
+                y_train_fold, y_val_fold = y[train_idx], y[val_idx]
+                
+                pipeline.fit(X_train_fold, y_train_fold)
+                score = pipeline.score(X_val_fold, y_val_fold)
+                scores.append(score)
+            
+            scores = np.array(scores)
             results.append({'params': params, 'mean_test_score': float(scores.mean()), 'std_test_score': float(scores.std())})
         except Exception as e:
             results.append({'params': params, 'mean_test_score': float('-inf'), 'std_test_score': None, 'error': str(e)})

@@ -9,7 +9,7 @@ import os
 import joblib
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import ParameterGrid, cross_val_score
+from sklearn.model_selection import ParameterGrid, cross_val_score, StratifiedKFold
 from types import SimpleNamespace
 from tqdm import tqdm
 from sklearn.pipeline import Pipeline
@@ -54,12 +54,30 @@ def train_gradient_boosting(
     # Manual search with progress bar
     candidates = list(ParameterGrid(param_grid))
     
+    # Create CV splitter
+    cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
+    
     results = []
-    for params in tqdm(candidates, desc='Gradient Boosting hyperparameter candidates'):
+    for params in tqdm(candidates, desc='Gradient Boosting hyperparameter search', position=0):
         pipeline.set_params(**params)
         try:
-            # Use n_jobs=1 for GB cross-validation to avoid nested parallelism issues
-            scores = cross_val_score(pipeline, X, y, cv=cv, n_jobs=1, scoring='accuracy')
+            scores = []
+            # Manual CV loop with progress bar for each fold
+            n_est = params.get('gb__n_estimators', '?')
+            lr = params.get('gb__learning_rate', '?')
+            for fold_idx, (train_idx, val_idx) in enumerate(tqdm(cv_splitter.split(X, y), 
+                                                                   total=cv, 
+                                                                   desc=f'  CV folds (n_est={n_est}, lr={lr})', 
+                                                                   position=1, 
+                                                                   leave=False)):
+                X_train_fold, X_val_fold = X[train_idx], X[val_idx]
+                y_train_fold, y_val_fold = y[train_idx], y[val_idx]
+                
+                pipeline.fit(X_train_fold, y_train_fold)
+                score = pipeline.score(X_val_fold, y_val_fold)
+                scores.append(score)
+            
+            scores = np.array(scores)
             results.append({
                 'params': params,
                 'mean_test_score': float(scores.mean()),

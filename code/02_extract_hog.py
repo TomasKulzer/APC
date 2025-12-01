@@ -32,10 +32,8 @@ def main():
     for split_name in ('train', 'val', 'test'):
         rel_paths = splits[f'{split_name}_paths']
         labels = splits[f'{split_name}_labels']
-        # Convert relative paths to dataset-relative paths (they are stored relative to data_dir)
-        # HOG extractor will join data_dir and rel_path
         save_path = os.path.join(out_dir, f'hog_{split_name}.joblib')
-        print(f"Extracting HOG for split '{split_name}' -> {save_path}")
+        print(f"Extracting HOG for split '{split_name}' ({len(rel_paths)} samples) -> {save_path}")
         extractor.process_dataset(data_path=data_dir, save_path=save_path, batch_size=32, image_paths=rel_paths, labels=labels, split_name=split_name)
         print('')
 

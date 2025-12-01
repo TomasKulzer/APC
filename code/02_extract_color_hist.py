@@ -45,12 +45,10 @@ def main():
                 paths.append(os.path.join(data_dir, p))
 
         save_path = os.path.join(out_dir, f'colorhist_{split}.joblib')
-        print(f"Extracting color hist for split '{split}' -> {save_path}")
+        print(f"Extracting color hist for split '{split}' ({len(paths)} samples) -> {save_path}")
 
         # Process with progress bar
-        n = len(paths)
-        feats = np.zeros((n, extractor.bins * 3), dtype=np.float32)
-        lbls_out = []
+        features = []
         for i, p in enumerate(tqdm(paths, desc=f"ColorHist {split}")):
             img = cv2.imread(p)
             if img is None:
@@ -60,15 +58,14 @@ def main():
                     pil_img = Image.open(p).convert('RGB')
                     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
                 except Exception:
-                    feats[i] = np.zeros(extractor.bins * 3, dtype=np.float32)
-                    lbls_out.append(labels[i])
+                    features.append(np.zeros(extractor.bins * 3, dtype=np.float32))
                     continue
             feat = extractor.extract_histogram(img)
-            feats[i] = feat
-            lbls_out.append(labels[i])
+            features.append(feat)
 
-        joblib.dump({'features': feats, 'labels': lbls_out, 'paths': paths}, save_path)
-        print(f"Saved {feats.shape[0]} color-hist features for {split}")
+        features = np.array(features)
+        joblib.dump({'features': features, 'labels': labels, 'paths': paths}, save_path)
+        print(f"Saved {features.shape[0]} color-hist features for {split}")
 
 
 if __name__ == '__main__':
