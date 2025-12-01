@@ -1,1 +1,12 @@
 dataset/augmented/
+*.joblib
+features/
+evaluation_results/
+.venv/
+
+# Large feature files and models (>100MB)
+features/*.joblib
+features/combined/*.joblib
+
+# Keep structure but ignore data
+*.joblib
