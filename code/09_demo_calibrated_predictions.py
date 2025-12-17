@@ -97,7 +97,7 @@ def main():
     print("\nLoading test data...")
     X_test = joblib.load('features/combined/combined_test.joblib')
     y_test = joblib.load('features/combined/labels_test.joblib')
-    splits = joblib.load('dataset/splits.joblib')
+    splits = joblib.load('Dataset/splits.joblib')
     
     X_test = np.asarray(X_test.get('features', X_test))
     y_test = np.asarray(y_test.get('labels', y_test))

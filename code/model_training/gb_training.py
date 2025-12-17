@@ -117,3 +117,18 @@ def load_data(features_path: str, labels_path: str):
     labels = labels_data.get('labels', labels_data)
     
     return np.asarray(features), np.asarray(labels)
+
+
+def load_ordinal_data(features_path: str, labels_path: str):
+    """Load features and ordinal labels from separate files."""
+    feats_data = joblib.load(features_path)
+    labels_data = joblib.load(labels_path)
+    
+    features = feats_data.get('features', feats_data)
+    # Ordinal labels are stored in a dict with key 'labels'
+    if isinstance(labels_data, dict):
+        ordinal_labels = labels_data.get('labels', labels_data)
+    else:
+        ordinal_labels = labels_data
+    
+    return np.asarray(features), np.asarray(ordinal_labels)

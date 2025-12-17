@@ -40,9 +40,9 @@ def train_svm(
     - fitted search object with best_estimator_, best_params_, best_score_, cv_results_
     """
     if param_grid is None:
-        # Reduced grid for high-dimensional features to speed up training
+        # Minimal grid for fast testing
         param_grid = {
-            'svc__C': [1, 10],
+            'svc__C': [1],
             'svc__gamma': ['scale'],
         }
 

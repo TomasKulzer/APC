@@ -32,7 +32,7 @@ def visualize_all_features(sample_idx: int = 0, output_dir: str = 'visualization
         output_dir: Base directory for saving visualizations
     """
     # Load splits to get sample paths
-    splits = joblib.load('dataset/splits.joblib')
+    splits = joblib.load('Dataset/splits.joblib')
     train_paths = splits['train_paths']
     train_labels = splits['train_labels']
     
@@ -43,7 +43,7 @@ def visualize_all_features(sample_idx: int = 0, output_dir: str = 'visualization
     # Get the sample path
     sample_path = train_paths[sample_idx]
     # Handle paths that may already include dataset prefix
-    if sample_path.startswith('dataset' + os.sep):
+    if sample_path.startswith('Dataset' + os.sep):
         # Path already has dataset prefix, use as-is
         pass
     elif os.path.isabs(sample_path):
@@ -51,7 +51,7 @@ def visualize_all_features(sample_idx: int = 0, output_dir: str = 'visualization
         pass
     else:
         # Relative path without dataset prefix
-        sample_path = os.path.join('dataset', sample_path)
+        sample_path = os.path.join('Dataset', sample_path)
     
     sample_label = train_labels[sample_idx]
     

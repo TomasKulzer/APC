@@ -18,6 +18,7 @@ from pathlib import Path
 import json
 import matplotlib.pyplot as plt
 import seaborn as sns
+from tqdm import tqdm
 
 
 def load_model(model_path):
@@ -44,15 +45,27 @@ def evaluate_model(model, X, y, class_names, model_name):
     print(f"Evaluating: {model_name}")
     print('='*60)
     
-    # Get predictions
-    y_pred = model.predict(X)
+    # Get predictions with progress bar
+    print("Making predictions...")
+    # Predict in batches with progress bar
+    batch_size = 50
+    n_samples = X.shape[0]
+    predictions = []
+    
+    for i in tqdm(range(0, n_samples, batch_size), desc=f'  Predicting {model_name}'):
+        batch_end = min(i + batch_size, n_samples)
+        batch_pred = model.predict(X[i:batch_end])
+        predictions.append(batch_pred)
+    
+    y_pred = np.vstack(predictions) if len(predictions[0].shape) > 1 else np.concatenate(predictions)
     
     # For ordinal models, decode predictions
     if len(y_pred.shape) > 1 and y_pred.shape[1] > 1:
-        print("Detected ordinal predictions, decoding...")
+        print("Decoding ordinal predictions...")
         y_pred = np.sum(y_pred, axis=1).astype(int)
     
     # Compute metrics
+    print("Computing metrics...")
     accuracy = accuracy_score(y, y_pred)
     precision = precision_score(y, y_pred, average='weighted', zero_division=0)
     recall = recall_score(y, y_pred, average='weighted', zero_division=0)
@@ -189,13 +202,12 @@ def main():
     print(f"Validation set: {X_val.shape[0]} samples, {X_val.shape[1]} features")
     print(f"Classes: {class_names}")
     
-    # Models to evaluate
+    # Models to evaluate (include integer SVM and Random Forest for comparison)
     models_to_evaluate = [
         ('features/model_svm.joblib', 'Integer SVM'),
         ('features/model_rf.joblib', 'Integer Random Forest'),
-        ('features/model_gb.joblib', 'Gradient Boosting'),
         ('features/model_svm_ordinal.joblib', 'Ordinal SVM'),
-        ('features/model_rf_ordinal.joblib', 'Ordinal Random Forest'),
+        ('features/model_gb_ordinal.joblib', 'Ordinal Gradient Boosting'),
     ]
     
     results = []
@@ -206,7 +218,7 @@ def main():
     viz_dir.mkdir(parents=True, exist_ok=True)
     
     # Evaluate each model
-    for model_path, model_name in models_to_evaluate:
+    for model_path, model_name in tqdm(models_to_evaluate, desc='Evaluating models'):
         model = load_model(model_path)
         
         if model is None:

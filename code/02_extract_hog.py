@@ -18,7 +18,7 @@ from feature_extraction.hog_extractor import HOGFeatureExtractor
 
 
 def main():
-    data_dir = 'dataset'
+    data_dir = 'Dataset'
     splits_file = os.path.join(data_dir, 'splits.joblib')
     out_dir = 'features'
     os.makedirs(out_dir, exist_ok=True)

@@ -86,7 +86,7 @@ def main():
     scaler_path, transformed = fit_and_apply_scaler(X_train, {'train': X_train, 'val': X_val, 'test': X_test}, combined_out)
     
     # Load splits to get class names for ordinal encoding
-    splits_data = joblib.load('dataset/splits.joblib')
+    splits_data = joblib.load('Dataset/splits.joblib')
     class_names = splits_data.get('class_names', ['resistor', 'capacitor', 'transistor', 'IC'])
     
     # Create ordinal encoder with the meaningful class order

@@ -37,10 +37,20 @@ class ImageLoader:
         map class names to ordinal labels,
         collect image paths and labels.
         """
-        """self.class_names = sorted(entry.name for entry in os.scandir(self.root_dir) if entry.is_dir())"""
-        self.class_names = ["resistor", "capacitor", "transistor", "IC"]
-
-        self.class_to_idx = {cls_name: idx for idx, cls_name in enumerate(self.class_names)}
+        # Get all directories and sort them to maintain ordinal order
+        # Skip 'augmented' directory if it exists
+        self.class_names = sorted(
+            entry.name for entry in os.scandir(self.root_dir) 
+            if entry.is_dir() and entry.name != 'augmented'
+        )
+        
+        # Extract ordinal labels from directory names (e.g., "0Immature" -> 0)
+        # The directory names should be in format: "<ordinal_label><class_name>"
+        self.class_to_idx = {}
+        for cls_name in self.class_names:
+            # Extract the leading digit as the ordinal label
+            ordinal_label = int(cls_name[0])
+            self.class_to_idx[cls_name] = ordinal_label
 
         for cls_name in self.class_names:
             cls_dir = os.path.join(self.root_dir, cls_name)

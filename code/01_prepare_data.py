@@ -22,7 +22,7 @@ from tqdm import tqdm
 import cv2
 
 
-def main(data_dir: str = 'dataset', n_augmentations: int = 3):
+def main(data_dir: str = 'Dataset', n_augmentations: int = 3):
     """
     Prepare dataset splits and optionally generate augmented training images.
     
