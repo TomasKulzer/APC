@@ -57,7 +57,8 @@ def train_with_mord_wrapper(X: np.ndarray, y: np.ndarray, n_estimators: int = 50
     return pipeline
 
 
-def train_with_multioutput_rf(X: np.ndarray, y: np.ndarray, n_estimators: int = 50, random_state: int = 42):
+def train_with_multioutput_rf(X: np.ndarray, y: np.ndarray, n_estimators: int = 50, 
+                              max_depth: int = 50, min_samples_leaf: int = 2, random_state: int = 42):
     """
     Train using MultiOutputClassifier with RandomForest.
     One binary RF per ordinal threshold.
@@ -66,6 +67,8 @@ def train_with_multioutput_rf(X: np.ndarray, y: np.ndarray, n_estimators: int = 
     
     base_rf = RandomForestClassifier(
         n_estimators=n_estimators,
+        max_depth=max_depth,  # Limit tree depth
+        min_samples_leaf=min_samples_leaf,  # Min samples per leaf
         random_state=random_state,
         n_jobs=1,
         verbose=1  # Show progress during training
@@ -83,7 +86,8 @@ def train_with_multioutput_rf(X: np.ndarray, y: np.ndarray, n_estimators: int = 
     return pipeline
 
 
-def train_with_monotonic_hgb(X: np.ndarray, y: np.ndarray, max_iter: int = 100, random_state: int = 42):
+def train_with_monotonic_hgb(X: np.ndarray, y: np.ndarray, max_iter: int = 100, 
+                             max_depth: int = 5, learning_rate: float = 0.1, random_state: int = 42):
     """
     Train using HistGradientBoosting with monotonic constraints.
     Note: This uses HGB not RF, but supports monotonic constraints natively.
@@ -92,6 +96,8 @@ def train_with_monotonic_hgb(X: np.ndarray, y: np.ndarray, max_iter: int = 100, 
     
     base_hgb = HistGradientBoostingClassifier(
         max_iter=max_iter,
+        max_depth=max_depth,  # Limit tree depth
+        learning_rate=learning_rate,  # Control step size
         random_state=random_state,
         verbose=1  # Show progress during training
     )

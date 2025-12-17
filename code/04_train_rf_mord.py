@@ -64,7 +64,7 @@ if __name__ == '__main__':
     p.add_argument('--out', default='features/model_rf_mord.joblib', help='Output model path')
     p.add_argument('--method', choices=['mord', 'multi_rf', 'monotonic_hgb'], default='monotonic_hgb',
                    help='Training method: mord (LogisticAT), multi_rf (MultiOutput RF), monotonic_hgb (HGB with constraints)')
-    p.add_argument('--n_estimators', type=int, default=100, help='Number of trees/iterations')
+    p.add_argument('--n_estimators', type=int, default=500, help='Number of trees/iterations')
     p.add_argument('--random_state', type=int, default=42)
     args = p.parse_args()
     main(args)
