@@ -209,6 +209,8 @@ def main():
         ('features/model_svm_ordinal.joblib', 'Ordinal SVM'),
         ('features/model_gb_ordinal.joblib', 'Ordinal Gradient Boosting'),
         ('features/model_rf_mord.joblib', 'Ordinal RF (HGB Monotonic)'),
+        ('features/model_svm_mord.joblib', 'Ordinal SVM (mord LogisticIT)'),
+        ('features/model_gb_lightgbm.joblib', 'Ordinal GB (LightGBM)'),
     ]
     
     results = []
