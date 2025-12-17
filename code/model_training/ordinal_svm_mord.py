@@ -20,15 +20,21 @@ except ImportError:
     print("Warning: mord not installed. Run: pip install mord")
 
 
-def train_with_mord_logistic_it(X: np.ndarray, y: np.ndarray, alpha: float = 1.0):
+def train_with_mord_logistic_it(X: np.ndarray, y: np.ndarray, alpha: float = 1.0, 
+                                max_iter: int = 1000, verbose: int = 0):
     """
     Train using mord's LogisticIT (Immediate-Threshold variant).
     Ordinal regression approach that respects the ordering of classes.
+    
+    Parameters:
+    - alpha: Regularization strength (higher = more regularization)
+    - max_iter: Maximum iterations for convergence
+    - verbose: Verbosity level (0=silent, 1=some info, 2=detailed)
     """
     if not MORD_AVAILABLE:
         raise ImportError("mord not installed. Run: pip install mord")
     
-    clf = mord.LogisticIT(alpha=alpha)
+    clf = mord.LogisticIT(alpha=alpha, max_iter=max_iter, verbose=verbose)
     pipeline = Pipeline([
         ('scaler', StandardScaler()),
         ('ordinal', clf)

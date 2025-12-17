@@ -204,10 +204,6 @@ def main():
     
     # Models to evaluate (include integer SVM and Random Forest for comparison)
     models_to_evaluate = [
-        ('features/model_svm.joblib', 'Integer SVM'),
-        ('features/model_rf.joblib', 'Integer Random Forest'),
-        ('features/model_svm_ordinal.joblib', 'Ordinal SVM'),
-        ('features/model_gb_ordinal.joblib', 'Ordinal Gradient Boosting'),
         ('features/model_rf_mord.joblib', 'Ordinal RF (HGB Monotonic)'),
         ('features/model_svm_mord.joblib', 'Ordinal SVM (mord LogisticIT)'),
         ('features/model_gb_lightgbm.joblib', 'Ordinal GB (LightGBM)'),

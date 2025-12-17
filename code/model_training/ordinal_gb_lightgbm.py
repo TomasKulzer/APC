@@ -52,25 +52,16 @@ def train_with_lightgbm(X: np.ndarray, y: np.ndarray, num_iterations: int = 100,
     # Create LightGBM dataset
     train_data = lgb.Dataset(X_scaled, label=y)
     
-    # Parameters for multiclass - optimized for better performance
+    # Simple, effective parameters for multiclass
     params = {
         'objective': 'multiclass',
         'num_class': len(np.unique(y)),
         'metric': 'multi_logloss',
         'learning_rate': learning_rate,
-        'num_leaves': 63,  # Increased for more complex trees
-        'max_depth': 8,  # Deeper trees
-        'min_data_in_leaf': 10,  # Minimum samples per leaf
-        'feature_fraction': 0.8,  # Use 80% of features per tree
-        'bagging_fraction': 0.8,  # Use 80% of samples per iteration
-        'bagging_freq': 5,  # Bagging every 5 iterations
-        'lambda_l1': 0.1,  # L1 regularization
-        'lambda_l2': 0.1,  # L2 regularization
-        'min_gain_to_split': 0.01,  # Minimum gain to make a split
+        'num_leaves': 31,
         'verbose': 1,
         'random_state': random_state,
-        'force_col_wise': True,  # Better for high-dimensional data
-        'boost_from_average': True  # Better initialization
+        'force_col_wise': True
     }
     
     print(f"Training LightGBM (multiclass, {num_iterations} iterations)...")
