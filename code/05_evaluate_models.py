@@ -208,6 +208,7 @@ def main():
         ('features/model_rf.joblib', 'Integer Random Forest'),
         ('features/model_svm_ordinal.joblib', 'Ordinal SVM'),
         ('features/model_gb_ordinal.joblib', 'Ordinal Gradient Boosting'),
+        ('features/model_rf_mord.joblib', 'Ordinal RF (HGB Monotonic)'),
     ]
     
     results = []
