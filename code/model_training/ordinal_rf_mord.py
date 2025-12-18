@@ -26,13 +26,31 @@ except ImportError:
 
 
 def ordinal_encode_labels(y: np.ndarray) -> np.ndarray:
-    """Convert integer labels to ordinal binary matrix."""
+    """Convert integer labels (0-4) to ordinal binary matrix."""
     n_classes = len(np.unique(y))
     y_ordinal = np.zeros((len(y), n_classes - 1), dtype=int)
     for i, label in enumerate(y):
         for threshold in range(n_classes - 1):
             y_ordinal[i, threshold] = 1 if label > threshold else 0
     return y_ordinal
+
+
+def decode_ordinal_predictions(probas: np.ndarray) -> np.ndarray:
+    """Decode multioutput probabilities to single ordinal prediction.
+    
+    Args:
+        probas: Array of shape (n_samples, n_thresholds) with probabilities
+                for each threshold classifier
+    
+    Returns:
+        predictions: Array of predicted class labels (0-4)
+    """
+    predictions = np.zeros(len(probas))
+    for i, probs in enumerate(probas):
+        # Count how many thresholds predict 1 (y > threshold)
+        # This gives us the predicted class
+        predictions[i] = np.sum(probs > 0.5)
+    return predictions.astype(int)
 
 
 def train_with_mord_wrapper(X: np.ndarray, y: np.ndarray, n_estimators: int = 50, random_state: int = 42):
@@ -57,31 +75,52 @@ def train_with_mord_wrapper(X: np.ndarray, y: np.ndarray, n_estimators: int = 50
     return pipeline
 
 
-def train_with_multioutput_rf(X: np.ndarray, y: np.ndarray, n_estimators: int = 50, 
-                              max_depth: int = 50, min_samples_leaf: int = 2, random_state: int = 42):
+def train_with_multioutput_rf(X: np.ndarray, y: np.ndarray, n_estimators: int = 100, 
+                              max_depth: int = 6, min_samples_leaf: int = 8, random_state: int = 42):
     """
-    Train using MultiOutputClassifier with RandomForest.
-    One binary RF per ordinal threshold.
+    FIXED MultiOutput RF with balanced weights and shallow trees.
+    One binary RF per ordinal threshold - now with class_weight='balanced'.
+    
+    Args:
+        X: Training features
+        y: Integer labels (0-4)
+        n_estimators: Number of trees per RF (default: 100)
+        max_depth: Max tree depth (default: 6, reduced from 50)
+        min_samples_leaf: Min samples per leaf (default: 8, increased from 2)
+        random_state: Random seed
+    
+    Returns:
+        Fitted pipeline with scaler and multi-output RF
     """
     y_ordinal = ordinal_encode_labels(y)
+    print(f"Ordinal targets shape: {y_ordinal.shape} ({y_ordinal.shape[1]} binary thresholds)")
     
+    # CRITICAL FIX: Add class_weight='balanced' to handle threshold imbalance
+    # This ensures extreme classes (Immature/Decayed) are not ignored
     base_rf = RandomForestClassifier(
         n_estimators=n_estimators,
-        max_depth=max_depth,  # Limit tree depth
-        min_samples_leaf=min_samples_leaf,  # Min samples per leaf
+        max_depth=max_depth,           # Shallow to prevent overfitting
+        min_samples_leaf=min_samples_leaf,  # Regularization
+        class_weight='balanced',       # FIX: Handle threshold imbalance
         random_state=random_state,
-        n_jobs=1,
+        n_jobs=-1,
         verbose=1  # Show progress during training
     )
     
-    multi_clf = MultiOutputClassifier(base_rf, n_jobs=1)
+    multi_clf = MultiOutputClassifier(base_rf, n_jobs=-1)
     pipeline = Pipeline([
         ('scaler', StandardScaler()),
         ('multi', multi_clf)
     ])
     
-    print(f"Training MultiOutput RF ({n_estimators} trees per threshold)...")
-    print(f"Training {y_ordinal.shape[1]} binary RF models...")
+    print(f"\n{'='*60}")
+    print(f"Training FIXED MultiOutput RF:")
+    print(f"  - Trees per threshold: {n_estimators}")
+    print(f"  - Max depth: {max_depth} (shallow to prevent overfitting)")
+    print(f"  - Min samples/leaf: {min_samples_leaf} (regularization)")
+    print(f"  - Balanced class weights: ENABLED (critical fix)")
+    print(f"{'='*60}\n")
+    
     pipeline.fit(X, y_ordinal)
     return pipeline
 
