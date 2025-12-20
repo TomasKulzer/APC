@@ -26,13 +26,13 @@ def main():
     parser.add_argument(
         '--n_iterations',
         type=int,
-        default=400,
+        default=3000,
         help='Number of boosting iterations (default: 100)'
     )
     parser.add_argument(
         '--learning_rate',
         type=float,
-        default=0.05,
+        default=0.03,
         help='Learning rate (default: 0.1)'
     )
     parser.add_argument(

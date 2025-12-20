@@ -75,54 +75,65 @@ def train_with_mord_wrapper(X: np.ndarray, y: np.ndarray, n_estimators: int = 50
     return pipeline
 
 
-def train_with_multioutput_rf(X: np.ndarray, y: np.ndarray, n_estimators: int = 100, 
-                              max_depth: int = 6, min_samples_leaf: int = 8, random_state: int = 42):
+def train_direct_ordinal_rf(X: np.ndarray, y: np.ndarray, n_estimators: int = 500, 
+                            max_depth: int = 6, min_samples_leaf: int = 8, random_state: int = 42):
     """
-    FIXED MultiOutput RF with balanced weights and shallow trees.
-    One binary RF per ordinal threshold - now with class_weight='balanced'.
+    DIRECT Ordinal RF using standard multiclass classification.
+    This treats the ordinal problem as multiclass classification.
     
     Args:
         X: Training features
         y: Integer labels (0-4)
-        n_estimators: Number of trees per RF (default: 100)
-        max_depth: Max tree depth (default: 6, reduced from 50)
-        min_samples_leaf: Min samples per leaf (default: 8, increased from 2)
+        n_estimators: Number of trees (default: 500)
+        max_depth: Max tree depth (default: 6)
+        min_samples_leaf: Min samples per leaf (default: 8)
         random_state: Random seed
     
     Returns:
-        Fitted pipeline with scaler and multi-output RF
+        Fitted pipeline with scaler and RF
     """
-    y_ordinal = ordinal_encode_labels(y)
-    print(f"Ordinal targets shape: {y_ordinal.shape} ({y_ordinal.shape[1]} binary thresholds)")
     
-    # CRITICAL FIX: Add class_weight='balanced' to handle threshold imbalance
-    # This ensures extreme classes (Immature/Decayed) are not ignored
-    base_rf = RandomForestClassifier(
+    print(f"Training with {len(np.unique(y))} classes: {sorted(np.unique(y))}")
+    
+    rf = RandomForestClassifier(
         n_estimators=n_estimators,
-        max_depth=max_depth,           # Shallow to prevent overfitting
-        min_samples_leaf=min_samples_leaf,  # Regularization
-        class_weight='balanced',       # FIX: Handle threshold imbalance
+        max_depth=max_depth,
+        min_samples_leaf=min_samples_leaf,
+        class_weight='balanced_subsample',  # Better than 'balanced'
         random_state=random_state,
         n_jobs=-1,
-        verbose=1  # Show progress during training
+        verbose=1
     )
     
-    multi_clf = MultiOutputClassifier(base_rf, n_jobs=-1)
     pipeline = Pipeline([
         ('scaler', StandardScaler()),
-        ('multi', multi_clf)
+        ('rf', rf)
     ])
     
     print(f"\n{'='*60}")
-    print(f"Training FIXED MultiOutput RF:")
-    print(f"  - Trees per threshold: {n_estimators}")
-    print(f"  - Max depth: {max_depth} (shallow to prevent overfitting)")
-    print(f"  - Min samples/leaf: {min_samples_leaf} (regularization)")
-    print(f"  - Balanced class weights: ENABLED (critical fix)")
+    print(f"Training DIRECT Ordinal RF:")
+    print(f"  - Number of trees: {n_estimators}")
+    print(f"  - Max depth: {max_depth}")
+    print(f"  - Min samples/leaf: {min_samples_leaf}")
+    print(f"  - Class weight: balanced_subsample")
     print(f"{'='*60}\n")
     
-    pipeline.fit(X, y_ordinal)
+    pipeline.fit(X, y)
     return pipeline
+
+
+def predict_direct(pipeline, X: np.ndarray) -> np.ndarray:
+    """
+    Predict using direct ordinal RF.
+    
+    Args:
+        pipeline: Fitted pipeline
+        X: Features to predict
+    
+    Returns:
+        Predicted class labels (0-4)
+    """
+    return pipeline.predict(X)
 
 
 def train_with_monotonic_hgb(X: np.ndarray, y: np.ndarray, max_iter: int = 100, 

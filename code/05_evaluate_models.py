@@ -202,10 +202,10 @@ def main():
     print(f"Validation set: {X_val.shape[0]} samples, {X_val.shape[1]} features")
     print(f"Classes: {class_names}")
     
-    # Models to evaluate (include integer SVM and Random Forest for comparison)
+    # Models to evaluate
     models_to_evaluate = [
         ('features/model_rf_mord.joblib', 'Ordinal RF (HGB Monotonic)'),
-        ('features/model_svm_mord.joblib', 'Ordinal SVM (mord LogisticIT)'),
+        ('features/model_svm_ordinal.joblib', 'Ordinal SVM (Threshold)'),
         ('features/model_gb_lightgbm.joblib', 'Ordinal GB (LightGBM)'),
     ]
     
