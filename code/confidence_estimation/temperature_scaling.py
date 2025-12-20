@@ -81,6 +81,13 @@ def get_logits_from_model(model, X):
     else:
         classifier = model
     
+    # Special handling for OrdinalSVMClassifier (threshold-based)
+    if hasattr(classifier, 'predict_proba_classes'):
+        # This is the threshold-based SVM - use class probabilities
+        probs = classifier.predict_proba_classes(X)
+        logits = np.log(probs + 1e-10)  # Convert to log-space
+        return logits
+    
     # Get decision function (logits)
     if hasattr(classifier, 'decision_function'):
         logits = classifier.decision_function(X)

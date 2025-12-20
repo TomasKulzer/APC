@@ -58,9 +58,9 @@ def main():
     
     # Models to calibrate
     models_to_calibrate = [
-        ('features/model_svm.joblib', 'Integer SVM'),
-        ('features/model_rf.joblib', 'Integer Random Forest'),
-        ('features/model_gb.joblib', 'Gradient Boosting'),
+        ('features/model_rf_mord.joblib', 'Ordinal RF (HGB Monotonic)'),
+        ('features/model_svm_ordinal.joblib', 'Ordinal SVM (Threshold)'),
+        ('features/model_gb_lightgbm.joblib', 'Ordinal GB (LightGBM)'),
     ]
     
     results = {}

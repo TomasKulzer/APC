@@ -283,6 +283,49 @@ class OrdinalSVMClassifier:
         """
         probas = self.predict_proba(X)
         return decode_svm_predictions(probas)
+    
+    def predict_proba_classes(self, X: np.ndarray) -> np.ndarray:
+        """
+        Predict class probabilities (for calibration/evaluation).
+        
+        Converts threshold probabilities P(y > k) to class probabilities P(y = c).
+        
+        Parameters:
+        -----------
+        X : np.ndarray
+            Features to predict, shape (n_samples, n_features).
+        
+        Returns:
+        --------
+        class_probas : np.ndarray
+            Class probabilities, shape (n_samples, 5) for classes 0-4.
+        """
+        threshold_probas = self.predict_proba(X)
+        n_samples = threshold_probas.shape[0]
+        n_classes = 5
+        
+        class_probas = np.zeros((n_samples, n_classes))
+        
+        # Convert threshold probabilities to class probabilities
+        # P(y = 0) = 1 - P(y > 0)
+        # P(y = 1) = P(y > 0) - P(y > 1)
+        # P(y = 2) = P(y > 1) - P(y > 2)
+        # P(y = 3) = P(y > 2) - P(y > 3)
+        # P(y = 4) = P(y > 3)
+        
+        for i in range(n_samples):
+            # Add padding for easier indexing
+            p_greater = np.concatenate([[1.0], threshold_probas[i], [0.0]])
+            
+            for c in range(n_classes):
+                class_probas[i, c] = p_greater[c] - p_greater[c + 1]
+        
+        # Normalize to ensure probabilities sum to 1 (handle numerical issues)
+        class_probas = np.maximum(class_probas, 0)  # Ensure non-negative
+        row_sums = class_probas.sum(axis=1, keepdims=True)
+        class_probas = class_probas / (row_sums + 1e-10)
+        
+        return class_probas
 
 
 def train_threshold_svm(

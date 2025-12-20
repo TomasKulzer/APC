@@ -26,13 +26,13 @@ def main():
     parser.add_argument(
         '--n_iterations',
         type=int,
-        default=1000,
+        default=5000,
         help='Number of boosting iterations (default: 5000)'
     )
     parser.add_argument(
         '--learning_rate',
         type=float,
-        default=0.02,
+        default=0.01,
         help='Learning rate (default: 0.02, lower for better generalization)'
     )
     parser.add_argument(
@@ -44,19 +44,19 @@ def main():
     parser.add_argument(
         '--max_depth',
         type=int,
-        default=20,
+        default=8,
         help='Maximum tree depth (default: 8)'
     )
     parser.add_argument(
         '--feature_fraction',
         type=float,
-        default=0.8,
+        default=0.5,
         help='Fraction of features per iteration (default: 0.8)'
     )
     parser.add_argument(
         '--bagging_fraction',
         type=float,
-        default=0.8,
+        default=0.5,
         help='Fraction of data per iteration (default: 0.8)'
     )
     parser.add_argument(
@@ -164,18 +164,18 @@ def main():
         print(f"Train-Val gap:           {gap:.4f} ({gap*100:.2f}%)")
         
         if gap > 0.15:
-            print("\n⚠️  High train-val gap suggests overfitting!")
+            print("\n  High train-val gap suggests overfitting!")
             print("   Recommendations:")
             print("   - Increase regularization: --reg_alpha 0.5 --reg_lambda 0.5")
             print("   - Lower learning rate: --learning_rate 0.01")
             print("   - Reduce complexity: --num_leaves 31 --max_depth 6")
         elif gap > 0.10:
-            print("\n⚡ Moderate overfitting detected")
+            print("\n Moderate overfitting detected")
             print("   Try: --reg_alpha 0.3 --reg_lambda 0.3")
         elif val_acc > 0.85:
-            print("\n✅ Excellent validation performance!")
+            print("\n Excellent validation performance!")
         else:
-            print(f"\n📊 Validation: {val_acc*100:.1f}% - Gap: {gap*100:.1f}%")
+            print(f"\n Validation: {val_acc*100:.1f}% - Gap: {gap*100:.1f}%")
         
     except FileNotFoundError:
         print("Validation data not found. Skipping validation evaluation.")

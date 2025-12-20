@@ -81,7 +81,7 @@ def main():
     parser.add_argument(
         '--max_iter',
         type=int,
-        default=500,
+        default=2000,
         help='Maximum iterations for SVM solver, -1 for no limit (default: 500)'
     )
     

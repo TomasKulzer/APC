@@ -72,7 +72,7 @@ if __name__ == '__main__':
     p.add_argument('--train', default='features/combined/combined_train.joblib', help='Path to training features')
     p.add_argument('--labels', default='features/combined/labels_train.joblib', help='Path to integer labels')
     p.add_argument('--out', default='features/model_rf_mord.joblib', help='Output model path')
-    p.add_argument('--n_estimators', type=int, default=5000, help='Number of trees (default: 500)')
+    p.add_argument('--n_estimators', type=int, default=1000, help='Number of trees (default: 500)')
     p.add_argument('--max_depth', type=int, default=50, help='Max tree depth (default: 6)')
     p.add_argument('--min_samples_leaf', type=int, default=20, help='Min samples per leaf (default: 8)')
     p.add_argument('--random_state', type=int, default=42)
