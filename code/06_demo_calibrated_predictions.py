@@ -1,7 +1,7 @@
 """
-Demo: Calibrated Gradient Boosting Predictions with Confidence Scores
+Demo: Calibrated LightGBM Predictions with Confidence Scores
 
-Shows predictions for 4 test samples from each class using Gradient Boosting
+Shows predictions for 4 test samples from each class using LightGBM
 with temperature scaling calibration. Displays actual images with confidence scores.
 """
 
@@ -90,7 +90,7 @@ def plot_samples_with_predictions(image_paths, predictions, true_labels, probs_c
 
 def main():
     print("="*80)
-    print("CALIBRATED GRADIENT BOOSTING - TEST SAMPLE PREDICTIONS")
+    print("CALIBRATED LIGHTGBM - TEST SAMPLE PREDICTIONS")
     print("="*80)
     
     # Load test data and splits
@@ -111,16 +111,28 @@ def main():
     class_names = encoder_info['class_names']
     
     # Load model
-    print("Loading Gradient Boosting model...")
-    model_data = joblib.load('features/model_gb.joblib')
-    model = model_data.best_estimator_ if hasattr(model_data, 'best_estimator_') else model_data
+    print("Loading LightGBM model...")
+    model = joblib.load('features/model_gb_lightgbm.joblib')
     
     # Load temperature from calibration results
     print("Loading temperature scaling calibration...")
     import json
     with open('evaluation_results/temperature_scaling_results.json', 'r') as f:
         calibration_results = json.load(f)
-    temperature = calibration_results['Gradient Boosting']['temperature']
+    
+    # Use the correct model name key
+    model_key = 'Ordinal GB (LightGBM)'
+    if model_key not in calibration_results:
+        print(f"\nWarning: '{model_key}' not found in calibration results.")
+        print(f"Available models: {list(calibration_results.keys())}")
+        # Try to find a matching key
+        for key in calibration_results.keys():
+            if 'lightgbm' in key.lower() or 'gb' in key.lower():
+                model_key = key
+                print(f"Using '{model_key}' instead.")
+                break
+    
+    temperature = calibration_results[model_key]['temperature']
     
     print(f"Using temperature: T = {temperature:.4f}")
     
@@ -138,7 +150,7 @@ def main():
     predictions = np.argmax(logits, axis=1)
     
     # Create output directory
-    viz_dir = Path('visualizations/calibration')
+    viz_dir = Path('visualizations/calibration/temperature_scaling')
     viz_dir.mkdir(parents=True, exist_ok=True)
     
     # Select 4 samples from each class and plot

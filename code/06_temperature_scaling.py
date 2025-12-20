@@ -64,7 +64,7 @@ def main():
     ]
     
     results = {}
-    viz_dir = Path('visualizations/calibration')
+    viz_dir = Path('visualizations/calibration/temperature_scaling')
     viz_dir.mkdir(parents=True, exist_ok=True)
     
     for model_path, model_name in models_to_calibrate:
