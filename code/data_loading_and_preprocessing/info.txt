@@ -1,2 +1,0 @@
-image_loader loads the img_filenames
-ordinal_encoding makes the labels ordinal
