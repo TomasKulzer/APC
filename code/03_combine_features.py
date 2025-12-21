@@ -87,10 +87,7 @@ def main():
     
     # Load splits to get class names for ordinal encoding
     splits_data = joblib.load('Dataset/splits.joblib')
-    class_names = splits_data.get('class_names', ['resistor', 'capacitor', 'transistor', 'IC'])
-    
-    # Create ordinal encoder with the meaningful class order
-    ordinal_encoder = OrdinalEncoder(class_names)
+
     
     # Save integer labels (original)
     joblib.dump({'labels': per_split_labels['train']}, os.path.join(combined_out, 'labels_train.joblib'))
@@ -98,27 +95,14 @@ def main():
     joblib.dump({'labels': per_split_labels['test']}, os.path.join(combined_out, 'labels_test.joblib'))
     
     # Create and save ordinal labels
-    ordinal_train = ordinal_encoder.encode(per_split_labels['train'])
-    ordinal_val = ordinal_encoder.encode(per_split_labels['val'])
-    ordinal_test = ordinal_encoder.encode(per_split_labels['test'])
+  
     
-    joblib.dump({'labels': ordinal_train}, os.path.join(combined_out, 'labels_train_ordinal.joblib'))
-    joblib.dump({'labels': ordinal_val}, os.path.join(combined_out, 'labels_val_ordinal.joblib'))
-    joblib.dump({'labels': ordinal_test}, os.path.join(combined_out, 'labels_test_ordinal.joblib'))
+
     
-    # Save encoder info (class names and order) for reference, not the encoder object itself
-    joblib.dump({
-        'class_names': class_names,
-        'class_order': {name: idx for idx, name in enumerate(class_names)},
-        'num_classes': len(class_names)
-    }, os.path.join(combined_out, 'ordinal_encoder_info.joblib'))
+
     
     print('Saved combined and scaled features to', combined_out)
     print('Scaler:', scaler_path)
-    print(f'Class order: {class_names}')
-    print(f'Ordinal labels shape: {ordinal_train.shape} (n_samples, {ordinal_encoder.num_classes - 1})')
-    print('Integer labels saved to: labels_*split*.joblib')
-    print('Ordinal labels saved to: labels_*split*_ordinal.joblib')
 
 
 if __name__ == '__main__':

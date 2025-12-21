@@ -52,7 +52,7 @@ class FeatureVisualizer:
         return fig
 
     @staticmethod
-    def plot_feature_heatmap(features, sample_idx=0, shape=(224, 224)):
+    def plot_feature_heatmap(features, sample_idx=0, shape=(256, 256)):
         """
         Plot a heatmap of the HOG feature vector for a single sample
         

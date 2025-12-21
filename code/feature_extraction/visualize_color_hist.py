@@ -126,7 +126,7 @@ def main():
     parser.add_argument('--bins', type=int, default=32)
     args = parser.parse_args()
 
-    loader = ImageLoader(args.data_dir, image_size=(224, 224))
+    loader = ImageLoader(args.data_dir, image_size=(256, 256))
     if len(loader.image_paths) == 0:
         print('No images found in', args.data_dir)
         return

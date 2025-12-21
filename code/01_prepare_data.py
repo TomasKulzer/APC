@@ -34,7 +34,7 @@ def main(data_dir: str = 'Dataset', n_augmentations: int = 3):
         print(f"Dataset directory '{data_dir}' not found.")
         return
 
-    loader = ImageLoader(data_dir, image_size=(224, 224), mode='train', augment=False)
+    loader = ImageLoader(data_dir, image_size=(256, 256), mode='train', augment=False)
 
     print('Classes found:')
     for name in loader.class_names:

@@ -6,7 +6,7 @@ import random
 from typing import Tuple
 
 class ImageLoader:
-    def __init__(self, root_dir, image_size=(224, 224), *, mode: str = 'train', augment: bool = False,
+    def __init__(self, root_dir, image_size=(256, 256), *, mode: str = 'train', augment: bool = False,
                  rotation_deg: int = 15, flip_prob: float = 0.5, color_jitter_prob: float = 0.5,
                  noise_prob: float = 0.1):
         """

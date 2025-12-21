@@ -57,7 +57,7 @@ def main():
     parser.add_argument('--max-sample-desc', type=int, default=20000, help='Max descriptors to sample for vocab')
     args = parser.parse_args()
 
-    loader = ImageLoader(args.data_dir, image_size=(224, 224))
+    loader = ImageLoader(args.data_dir, image_size=(256, 256))
     if len(loader.image_paths) == 0:
         print('No images found in', args.data_dir)
         return
