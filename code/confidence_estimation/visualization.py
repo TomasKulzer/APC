@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from .temperature_scaling import evaluate_calibration
 
 
-def plot_reliability_diagram(probs_before, probs_after, labels, model_name, output_path, n_bins=10):
+def plot_reliability_diagram(probs_before, probs_after, labels, model_name, output_path, n_bins=20):
     """
     Plot reliability diagram showing calibration before and after temperature scaling.
     
@@ -40,13 +40,14 @@ def plot_reliability_diagram(probs_before, probs_after, labels, model_name, outp
         
         for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
             in_bin = (confidences > bin_lower) & (confidences <= bin_upper)
+            bin_center = (bin_lower + bin_upper) / 2
             if np.sum(in_bin) > 0:
                 bin_accuracies.append(np.mean(accuracies[in_bin]))
-                bin_confidences.append(np.mean(confidences[in_bin]))
+                bin_confidences.append(bin_center)
                 bin_counts.append(np.sum(in_bin))
             else:
                 bin_accuracies.append(0)
-                bin_confidences.append((bin_lower + bin_upper) / 2)
+                bin_confidences.append(bin_center)
                 bin_counts.append(0)
         
         # Plot
