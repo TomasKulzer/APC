@@ -204,9 +204,9 @@ def main():
     
     # Models to evaluate
     models_to_evaluate = [
-        ('features/model_rf_mord.joblib', 'RF'),
-        ('features/model_svm_ordinal.joblib', 'SVM'),
-        ('features/model_gb_lightgbm.joblib', 'GB'),
+        ('features/model_rf.joblib', 'RF'),
+        ('features/model_svm.joblib', 'SVM'),
+        ('features/model_gb.joblib', 'GB'),
 
     ]
     

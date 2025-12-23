@@ -20,7 +20,7 @@ import joblib
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from model_training.ordinal_rf_mord import train_direct_ordinal_rf, load_data
+from model_training.rf import train_direct_ordinal_rf, load_data
 
 
 def train_model(args):
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(description='Train DIRECT ordinal RF')
     p.add_argument('--train', default='features/combined/combined_train.joblib', help='Path to training features')
     p.add_argument('--labels', default='features/combined/labels_train.joblib', help='Path to integer labels')
-    p.add_argument('--out', default='features/model_rf_mord.joblib', help='Output model path')
+    p.add_argument('--out', default='features/model_rf.joblib', help='Output model path')
     p.add_argument('--n_estimators', type=int, default=1000, help='Number of trees (default: 500)')
     p.add_argument('--max_depth', type=int, default=50, help='Max tree depth (default: 6)')
     p.add_argument('--min_samples_leaf', type=int, default=20, help='Min samples per leaf (default: 8)')

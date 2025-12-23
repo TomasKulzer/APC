@@ -12,7 +12,7 @@ import sys
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent))
 
-from model_training.ordinal_gb_lightgbm import (
+from model_training.gb import (
     train_with_lightgbm,
     load_data,
     LIGHTGBM_AVAILABLE
@@ -91,7 +91,7 @@ def main():
     parser.add_argument(
         '--output',
         type=str,
-        default='features/model_gb_lightgbm.joblib',
+        default='features/model_gb.joblib',
         help='Output model path'
     )
     

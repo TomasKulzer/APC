@@ -112,7 +112,7 @@ def main():
     
     # Load model
     print("Loading LightGBM model...")
-    model = joblib.load('features/model_gb_lightgbm.joblib')
+    model = joblib.load('features/model_gb.joblib')
     
     # Load temperature from calibration results
     print("Loading temperature scaling calibration...")

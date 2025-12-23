@@ -21,7 +21,7 @@ from pathlib import Path
 # Add parent directory to path to import from model_training
 sys.path.insert(0, str(Path(__file__).parent))
 
-from model_training.ordinal_svm_threshold import train_threshold_svm, load_data
+from model_training.svm import train_threshold_svm, load_data
 
 
 def main():
@@ -52,7 +52,7 @@ def main():
     parser.add_argument(
         '--out',
         type=str,
-        default='features/model_svm_ordinal.joblib',
+        default='features/model_svm.joblib',
         help='Output path for the trained model (joblib file) (default: features/model_svm_ordinal.joblib)'
     )
     
