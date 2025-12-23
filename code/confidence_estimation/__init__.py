@@ -33,7 +33,7 @@ from .ordinal_calibration import (
     cumulative_to_probs
 )
 
-from .visualization import plot_reliability_diagram
+from .visualization import plot_reliability_diagram, plot_confidence_histogram
 
 __all__ = [
     'temperature_scaling',
@@ -57,5 +57,6 @@ __all__ = [
     'verify_ordinal_constraints',
     'probs_to_cumulative',
     'cumulative_to_probs',
-    'plot_reliability_diagram'
+    'plot_reliability_diagram',
+    'plot_confidence_histogram'
 ]

@@ -23,7 +23,8 @@ from confidence_estimation import (
     get_logits_from_model,
     temperature_scaling,
     evaluate_calibration,
-    plot_reliability_diagram
+    plot_reliability_diagram,
+    plot_confidence_histogram
 )
 
 
@@ -110,6 +111,17 @@ def main():
         )
         print(f"Saved reliability diagram to: {plot_path}")
         
+        # Plot confidence histogram for validation
+        conf_hist_path = viz_dir / f'{safe_name}_validation_confidence.png'
+        plot_confidence_histogram(
+            val_results['probs_before'],
+            val_results['probs_after'],
+            y_val,
+            f"{model_name} (Validation)",
+            conf_hist_path
+        )
+        print(f"Saved confidence histogram to: {conf_hist_path}")
+        
         # Test on test set
         print("\n--- Test Set Evaluation ---")
         test_logits = get_logits_from_model(model, X_test)
@@ -140,6 +152,17 @@ def main():
             plot_path_test
         )
         print(f"Saved test reliability diagram to: {plot_path_test}")
+        
+        # Plot confidence histogram for test
+        conf_hist_path_test = viz_dir / f'{safe_name}_test_confidence.png'
+        plot_confidence_histogram(
+            test_probs_before,
+            test_probs_after,
+            y_test,
+            f"{model_name} (Test)",
+            conf_hist_path_test
+        )
+        print(f"Saved test confidence histogram to: {conf_hist_path_test}")
         
         # Store results
         results[model_name] = {
