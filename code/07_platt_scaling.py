@@ -1,11 +1,10 @@
 """
-Apply Isotonic Regression Calibration to Models
+Apply Platt Scaling Calibration to Models
 
-This script calibrates trained models using isotonic regression on the validation set
+This script calibrates trained models using Platt scaling on the validation set
 and evaluates the calibration on the test set.
 
-Isotonic regression is a non-parametric method that learns a monotonic mapping
-from uncalibrated to calibrated probabilities.
+Platt scaling fits a logistic regression on model outputs to calibrate probabilities.
 """
 
 import sys
@@ -26,15 +25,15 @@ from confidence_estimation import (
     evaluate_calibration,
     plot_reliability_diagram
 )
-from confidence_estimation.isotonic_calibration import (
-    calibrate_model_isotonic,
-    apply_isotonic_calibration
+from confidence_estimation.platt_scaling import (
+    calibrate_model_platt,
+    apply_platt_scaling
 )
 
 
 def main():
     print("="*60)
-    print("ISOTONIC REGRESSION CALIBRATION")
+    print("PLATT SCALING CALIBRATION")
     print("="*60)
     
     # Load validation data
@@ -69,7 +68,7 @@ def main():
     ]
     
     results = {}
-    viz_dir = Path('visualizations/calibration/isotonic')
+    viz_dir = Path('visualizations/calibration/platt_scaling')
     viz_dir.mkdir(parents=True, exist_ok=True)
     
     # Store calibrators for later use
@@ -92,9 +91,9 @@ def main():
         
         # Calibrate on validation set
         print("\n--- Validation Set Calibration ---")
-        val_results = calibrate_model_isotonic(model, X_val, y_val, get_logits_from_model)
+        val_results = calibrate_model_platt(model, X_val, y_val, get_logits_from_model)
         
-        print(f"\nIsotonic Regression Fitted")
+        print(f"\nPlatt Scaling Parameters Fitted")
         print(f"NLL Before: {val_results['nll_before']:.4f}")
         print(f"NLL After:  {val_results['nll_after']:.4f}")
         print(f"Improvement: {val_results['nll_before'] - val_results['nll_after']:.4f}")
@@ -110,22 +109,23 @@ def main():
         safe_name = model_name.lower().replace(' ', '_')
         plot_path = viz_dir / f'{safe_name}_validation_reliability.png'
         plot_reliability_diagram(
-            val_results['probs_before'],
+            None,
             val_results['probs_after'],
             y_val,
-            f"{model_name} (Validation - Isotonic)",
-            plot_path
+            f"{model_name} (Validation - Platt Scaling)",
+            plot_path,
+            n_bins=15
         )
         print(f"Saved reliability diagram to: {plot_path}")
         
         # Store calibrator
-        calibrators[model_name] = val_results['iso_calibrator']
+        calibrators[model_name] = val_results['platt_scaler']
         
         # Test on test set
         print("\n--- Test Set Evaluation ---")
         test_logits = get_logits_from_model(model, X_test)
         test_probs_before = softmax(test_logits, axis=1)
-        test_probs_after = val_results['iso_calibrator'].predict_proba(test_probs_before)
+        test_probs_after = val_results['platt_scaler'].predict_proba(test_logits)
         
         test_nll_before = log_loss(y_test, test_probs_before)
         test_nll_after = log_loss(y_test, test_probs_after)
@@ -144,11 +144,12 @@ def main():
         # Plot reliability diagram for test
         plot_path_test = viz_dir / f'{safe_name}_test_reliability.png'
         plot_reliability_diagram(
-            test_probs_before,
+            None,
             test_probs_after,
             y_test,
-            f"{model_name} (Test - Isotonic)",
-            plot_path_test
+            f"{model_name} (Test - Platt Scaling)",
+            plot_path_test,
+            n_bins=15
         )
         print(f"Saved test reliability diagram to: {plot_path_test}")
         
@@ -174,20 +175,20 @@ def main():
     output_dir = Path('evaluation_results')
     output_dir.mkdir(exist_ok=True)
     
-    results_path = output_dir / 'isotonic_calibration_results.json'
+    results_path = output_dir / 'platt_scaling_results.json'
     print(f"\n{'='*60}")
     print(f"Saving results to: {results_path}")
     with open(results_path, 'w') as f:
         json.dump(results, f, indent=2)
     
     # Save calibrators
-    calibrators_path = output_dir / 'isotonic_calibrators.joblib'
-    print(f"Saving isotonic calibrators to: {calibrators_path}")
+    calibrators_path = output_dir / 'platt_scalers.joblib'
+    print(f"Saving Platt scalers to: {calibrators_path}")
     joblib.dump(calibrators, calibrators_path)
     
     # Summary
     print("\n" + "="*60)
-    print("ISOTONIC CALIBRATION SUMMARY")
+    print("PLATT SCALING SUMMARY")
     print("="*60)
     
     print(f"\n{'Model':<30} {'Test NLL':<15} {'Test ECE':<15}")
@@ -200,7 +201,7 @@ def main():
         print(f"{model_name:<30} {nll_change:<15} {ece_change:<15}")
     
     print("\n" + "="*60)
-    print("ISOTONIC CALIBRATION COMPLETED")
+    print("PLATT SCALING COMPLETED")
     print("="*60)
 
 

@@ -1,10 +1,8 @@
 """
-Apply Platt Scaling Calibration to Models
+Apply Temperature Scaling Calibration to Models
 
-This script calibrates trained models using Platt scaling on the validation set
+This script calibrates trained models using temperature scaling on the validation set
 and evaluates the calibration on the test set.
-
-Platt scaling fits a logistic regression on model outputs to calibrate probabilities.
 """
 
 import sys
@@ -21,19 +19,18 @@ import json
 from scipy.special import softmax
 
 from confidence_estimation import (
+    calibrate_model_temperature,
     get_logits_from_model,
+    temperature_scaling,
     evaluate_calibration,
-    plot_reliability_diagram
-)
-from confidence_estimation.platt_scaling import (
-    calibrate_model_platt,
-    apply_platt_scaling
+    plot_reliability_diagram,
+    plot_confidence_histogram
 )
 
 
 def main():
     print("="*60)
-    print("PLATT SCALING CALIBRATION")
+    print("TEMPERATURE SCALING CALIBRATION")
     print("="*60)
     
     # Load validation data
@@ -68,11 +65,8 @@ def main():
     ]
     
     results = {}
-    viz_dir = Path('visualizations/calibration/platt_scaling')
+    viz_dir = Path('visualizations/calibration/temperature_scaling')
     viz_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Store calibrators for later use
-    calibrators = {}
     
     for model_path, model_name in models_to_calibrate:
         if not Path(model_path).exists():
@@ -91,9 +85,9 @@ def main():
         
         # Calibrate on validation set
         print("\n--- Validation Set Calibration ---")
-        val_results = calibrate_model_platt(model, X_val, y_val, get_logits_from_model)
+        val_results = calibrate_model_temperature(model, X_val, y_val)
         
-        print(f"\nPlatt Scaling Parameters Fitted")
+        print(f"\nOptimal Temperature: {val_results['temperature']:.4f}")
         print(f"NLL Before: {val_results['nll_before']:.4f}")
         print(f"NLL After:  {val_results['nll_after']:.4f}")
         print(f"Improvement: {val_results['nll_before'] - val_results['nll_after']:.4f}")
@@ -109,22 +103,31 @@ def main():
         safe_name = model_name.lower().replace(' ', '_')
         plot_path = viz_dir / f'{safe_name}_validation_reliability.png'
         plot_reliability_diagram(
-            val_results['probs_before'],
+            None,
             val_results['probs_after'],
             y_val,
-            f"{model_name} (Validation - Platt Scaling)",
-            plot_path
+            f"{model_name} (Validation - Temperature Scaling)",
+            plot_path,
+            n_bins=15
         )
         print(f"Saved reliability diagram to: {plot_path}")
         
-        # Store calibrator
-        calibrators[model_name] = val_results['platt_scaler']
+        # Plot confidence histogram for validation
+        conf_hist_path = viz_dir / f'{safe_name}_validation_confidence.png'
+        plot_confidence_histogram(
+            val_results['probs_before'],
+            val_results['probs_after'],
+            y_val,
+            f"{model_name} (Validation)",
+            conf_hist_path
+        )
+        print(f"Saved confidence histogram to: {conf_hist_path}")
         
         # Test on test set
         print("\n--- Test Set Evaluation ---")
         test_logits = get_logits_from_model(model, X_test)
         test_probs_before = softmax(test_logits, axis=1)
-        test_probs_after = val_results['platt_scaler'].predict_proba(test_logits)
+        test_probs_after = softmax(temperature_scaling(test_logits, val_results['temperature']), axis=1)
         
         test_nll_before = log_loss(y_test, test_probs_before)
         test_nll_after = log_loss(y_test, test_probs_after)
@@ -143,16 +146,29 @@ def main():
         # Plot reliability diagram for test
         plot_path_test = viz_dir / f'{safe_name}_test_reliability.png'
         plot_reliability_diagram(
-            test_probs_before,
+            None,
             test_probs_after,
             y_test,
-            f"{model_name} (Test - Platt Scaling)",
-            plot_path_test
+            f"{model_name} (Test - Temperature Scaling)",
+            plot_path_test,
+            n_bins=15
         )
         print(f"Saved test reliability diagram to: {plot_path_test}")
         
+        # Plot confidence histogram for test
+        conf_hist_path_test = viz_dir / f'{safe_name}_test_confidence.png'
+        plot_confidence_histogram(
+            test_probs_before,
+            test_probs_after,
+            y_test,
+            f"{model_name} (Test)",
+            conf_hist_path_test
+        )
+        print(f"Saved test confidence histogram to: {conf_hist_path_test}")
+        
         # Store results
         results[model_name] = {
+            'temperature': val_results['temperature'],
             'validation': {
                 'nll_before': val_results['nll_before'],
                 'nll_after': val_results['nll_after'],
@@ -173,33 +189,29 @@ def main():
     output_dir = Path('evaluation_results')
     output_dir.mkdir(exist_ok=True)
     
-    results_path = output_dir / 'platt_scaling_results.json'
+    results_path = output_dir / 'temperature_scaling_results.json'
     print(f"\n{'='*60}")
     print(f"Saving results to: {results_path}")
     with open(results_path, 'w') as f:
         json.dump(results, f, indent=2)
     
-    # Save calibrators
-    calibrators_path = output_dir / 'platt_scalers.joblib'
-    print(f"Saving Platt scalers to: {calibrators_path}")
-    joblib.dump(calibrators, calibrators_path)
-    
     # Summary
     print("\n" + "="*60)
-    print("PLATT SCALING SUMMARY")
+    print("CALIBRATION SUMMARY")
     print("="*60)
     
-    print(f"\n{'Model':<30} {'Test NLL':<15} {'Test ECE':<15}")
-    print(f"{'':30} {'Before→After':15} {'Before→After':15}")
-    print("-" * 75)
+    print(f"\n{'Model':<25} {'Temperature':<12} {'Test NLL':<12} {'Test ECE':<12}")
+    print(f"{'':25} {'':12} {'Before→After':12} {'Before→After':12}")
+    print("-" * 73)
     
     for model_name, res in results.items():
+        T = res['temperature']
         nll_change = f"{res['test']['nll_before']:.3f}→{res['test']['nll_after']:.3f}"
         ece_change = f"{res['test']['ece_before']:.3f}→{res['test']['ece_after']:.3f}"
-        print(f"{model_name:<30} {nll_change:<15} {ece_change:<15}")
+        print(f"{model_name:<25} {T:<12.4f} {nll_change:<12} {ece_change:<12}")
     
     print("\n" + "="*60)
-    print("PLATT SCALING COMPLETED")
+    print("TEMPERATURE SCALING COMPLETED")
     print("="*60)
 
 
