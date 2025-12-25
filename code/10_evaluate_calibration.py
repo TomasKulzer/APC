@@ -17,6 +17,7 @@ import joblib
 from sklearn.metrics import log_loss, accuracy_score
 from pathlib import Path
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 from scipy.special import softmax
 import json
 
@@ -106,25 +107,48 @@ def plot_comparison_reliability_diagrams(model, model_name, X_test, y_test,
                 bin_confidences.append(bin_center)
         
         # Plot
-        ax.plot([0, 1], [0, 1], 'k--', label='Perfect Calibration', linewidth=2)
-        
-        # Plot the gap between actual and perfect calibration (pink-red transparent bars)
-        #for i, (conf, acc) in enumerate(zip(bin_confidences, bin_accuracies)):
-         #   gap_height = abs(conf - acc)
-          #  gap_bottom = min(conf, acc)
-           # if gap_height > 0:
-            #    ax.bar(conf, gap_height, width=1.0/n_bins, 
-             #          bottom=gap_bottom, alpha=0.5, edgecolor='none', 
-              #         color='#fd3a3a')
-        
-        # Plot the actual model output bars on top
+        # Plot the actual model output bars first
         ax.bar(bin_confidences, bin_accuracies, width=1.0/n_bins, 
                alpha=1.0, edgecolor='black', linewidth=2, label='Model Output', color='#0000ff')
+        
+        # Plot the gap between actual and perfect calibration ON TOP
+        for i, (conf, acc) in enumerate(zip(bin_confidences, bin_accuracies)):
+            # Only plot if this bin has samples (acc > 0 or explicitly tracked)
+            # Check if bin had samples by looking at the calculation
+            bin_lower = bin_boundaries[i]
+            bin_upper = bin_boundaries[i + 1]
+            in_bin = (confidences > bin_lower) & (confidences <= bin_upper)
+            
+            if np.sum(in_bin) > 0:
+                gap_height = abs(conf - acc)
+                gap_bottom = min(conf, acc)
+                
+                # Choose color based on whether actual is below or above ideal
+                if acc < conf:  # Overconfident (actual below ideal)
+                    color = '#FF6347'  # Red-orange (tomato)
+                else:  # Underconfident (actual above ideal)
+                    color = '#8235b2'  # Purple
+                
+                if gap_height > 0:
+                    ax.bar(conf, gap_height, width=1.0/n_bins, 
+                           bottom=gap_bottom, alpha=0.7, edgecolor='black', 
+                           color=color, hatch='/', linewidth=0.5, zorder=3)
+        
+        # Plot perfect calibration line on top of everything
+        ax.plot([0, 1], [0, 1], 'k--', label='Expected', linewidth=2, zorder=4)
+        
+        # Create custom legend with Gap always shown as red-orange
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='#0000ff', edgecolor='black', linewidth=2, label='Accuracy'),
+            Patch(facecolor='#FF6347', edgecolor='black', hatch='/', alpha=0.7, label='Gap (Calibration Error)'),
+            plt.Line2D([0], [0], color='k', linestyle='--', linewidth=2, label='Expected')
+        ]
         
         ax.set_xlabel('Confidence', fontsize=16)
         ax.set_ylabel('Accuracy', fontsize=16)
         ax.set_title(f'{method_name}', fontsize=18, fontweight='bold')
-        ax.legend(loc='upper left', fontsize=14)
+        ax.legend(handles=legend_elements, loc='upper left', fontsize=16)
         ax.grid(alpha=0.3)
         ax.set_xlim([0, 1])
         ax.set_ylim([0, 1])
