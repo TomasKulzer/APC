@@ -39,6 +39,27 @@ def create_dataset_grid(dataset_path='Dataset', output_path='visualizations/data
     # Create figure with 5x5 grid
     fig, axes = plt.subplots(5, 5, figsize=(15, 15))
     
+    # Count total images first
+    total_images = 0
+    class_counts = []
+    
+    for class_dir in classes:
+        class_path = Path(dataset_path) / class_dir
+        image_files = list(class_path.glob('*.jpg')) + list(class_path.glob('*.png'))
+        count = len(image_files)
+        class_counts.append(count)
+        total_images += count
+    
+    # Print class distribution
+    print("\nClass Distribution:")
+    print("-" * 60)
+    for class_name, count in zip(class_names, class_counts):
+        percentage = (count / total_images * 100) if total_images > 0 else 0
+        print(f"{class_name:<20} {count:>6} images ({percentage:>5.2f}%)")
+    print("-" * 60)
+    print(f"{'Total':<20} {total_images:>6} images")
+    print()
+    
     # For each class (row)
     for row_idx, (class_dir, class_name) in enumerate(zip(classes, class_names)):
         class_path = Path(dataset_path) / class_dir
