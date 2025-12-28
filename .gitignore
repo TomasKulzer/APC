@@ -3,7 +3,7 @@ dataset/augmented/
 features/
 evaluation_results/
 .venv/
-
+venv/
 # Large feature files and models (>100MB)
 features/*.joblib
 features/combined/*.joblib
