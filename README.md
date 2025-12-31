@@ -18,7 +18,6 @@ pip install -r requirements.txt
 ```
 
 ## Running the Code
-
 Run each script in order (00, 01, 02, etc.).
 
 **Note:** To use only color histogram features, do not run the HOG or SIFT scripts or delete their features from the features/ directory.
